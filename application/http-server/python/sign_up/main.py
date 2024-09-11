@@ -23,8 +23,11 @@ sign_up_endpoint = SignUpEndpoint(sign_up_command_handler)
 def do_sign_up(username: str, password: str):
     print(f"Trying to sign up with ('{username}', '{password}')")
     request = SignUpRequest(username=username, password=password)
-    sign_up_endpoint.handle_request(request)
-    print(event_store.events)
+    try:
+        sign_up_endpoint.handle_request(request)
+        print("OK")
+    except ValueError as e:
+        print(e)
 
 
 def do_sign_in(username: str, password: str) -> str:
@@ -42,6 +45,7 @@ def do_sign_in(username: str, password: str) -> str:
 
 do_sign_up(username="test", password="test")  # Should succeed
 do_sign_up(username="test", password="test")  # Idempotent, should not create a new user
+do_sign_up(username="test", password="test2")  # Should fail, username already exists
 assert len(event_store.events) == 1
 assert len(users_read_store.db) == 1
 

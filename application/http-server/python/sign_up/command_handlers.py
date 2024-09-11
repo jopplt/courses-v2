@@ -11,12 +11,22 @@ class SignUpCommandHandler:
         self.event_store = event_store
 
     def handle(self, command: SignUpCommand):
+        encrypted_password = sha256(command.password.encode()).hexdigest()
+
         # Rule: username must be unique
         for event in self.event_store.events:
-            if event.event_name == EventName.USER_SIGNED_UP and event.payload["username"] == command.username:
+            if not event.event_name == EventName.USER_SIGNED_UP:
+                continue
+
+            is_same_username = event.payload["username"] == command.username
+            is_same_password = event.payload["password"] == encrypted_password
+
+            if is_same_username and is_same_password:
                 return
 
-        encrypted_password = sha256(command.password.encode()).hexdigest()
+            if is_same_username and not is_same_password:
+                raise ValueError("Username already exists")
+
         event = UserSignedUpV1(
             event_uuid=uuid.uuid4(),
             auto_incrementing_id=1,
