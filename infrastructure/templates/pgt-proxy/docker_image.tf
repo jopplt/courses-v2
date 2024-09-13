@@ -1,11 +1,11 @@
 resource "google_artifact_registry_repository" "docker_repository" {
   location      = local.gcp_default_region
-  repository_id = "pgt-proxy-repository-${var.environment_name}"
+  repository_id = "${var.resource_id_prefix}-pgtre"
   format        = "DOCKER"
 }
 
 resource "random_id" "image_tag" {
-  byte_length = 16
+  byte_length = 8
   keepers = {
     database_ca_cert_hash: md5(var.database_ca_cert_in_base64)
     proxy_key_hash: md5(var.pgtproxy_key_in_base64)
@@ -39,6 +39,8 @@ resource "null_resource" "push_image" {
       docker build --tag ${local.docker_registry_url}/${local.docker_repository_name}:${random_id.image_tag.hex} .
       echo ${local.gcp_current_access_token_for_docker} | docker login -u oauth2accesstoken --password-stdin https://${local.docker_registry_url}
       docker image push ${local.docker_registry_url}/${local.docker_repository_name}:${random_id.image_tag.hex}
+      cd ../
+      rm docker_image_builder_${random_id.image_tag.hex} -Rf
     EOT
     working_dir = path.module
   }

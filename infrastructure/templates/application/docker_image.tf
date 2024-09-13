@@ -6,7 +6,7 @@ resource "random_id" "image_tag" {
   }
 }
 
-resource "null_resource" "push_image" {
+resource "null_resource" "push_app_image" {
   triggers = {
     "image_tag": random_id.image_tag.hex
   }
@@ -21,7 +21,7 @@ resource "null_resource" "push_image" {
       docker build --tag ${local.docker_registry_url}/${local.docker_repository_name}:${random_id.image_tag.hex} .
       echo ${local.gcp_current_access_token_for_docker} | docker login -u oauth2accesstoken --password-stdin https://${local.docker_registry_url}
       docker image push ${local.docker_registry_url}/${local.docker_repository_name}:${random_id.image_tag.hex}
-      cd ../
+      cd ../../
       rm docker_image_builder_${var.application_directory_name}_${random_id.image_tag.hex}/ -Rf
     EOT
     working_dir = path.module

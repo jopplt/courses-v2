@@ -1,6 +1,6 @@
 resource "google_sql_database" "main" {
   project  = local.gcp_default_project
-  name     = "postgres-${var.environment_name}"
+  name     = "${var.resource_id_prefix}-db"
   instance = google_sql_database_instance.main.name
   charset  = "UTF8"
   collation = "en_US.UTF8"
@@ -9,7 +9,7 @@ resource "google_sql_database" "main" {
 
 resource "google_sql_database_instance" "main" {
   project             = local.gcp_default_project
-  name                = "postgres-${var.environment_name}-1"
+  name                = "${var.resource_id_prefix}-i1"
   database_version    = "POSTGRES_15"
   region              = local.gcp_default_region
   deletion_protection = false
@@ -39,7 +39,7 @@ resource "google_sql_database_instance" "main" {
       enable_private_path_for_google_cloud_services = true
 
       dynamic "authorized_networks" {
-        for_each = var.public_cidr_ranges_with_access
+        for_each = var.public_cidrs_with_access
         iterator = cidr
 
         content {
